@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using MoveShape.Hubs;
 
 namespace MoveShape
@@ -12,19 +13,20 @@ namespace MoveShape
             services.AddSignalR();
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseStaticFiles();
             app.UseFileServer();
 
-            app.UseSignalR(router =>
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
             {
-                router.MapHub<ShapeHub>("shapeHub");
+                endpoints.MapHub<ShapeHub>("/shapeHub");
             });
         }
     }

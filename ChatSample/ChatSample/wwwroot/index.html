@@ -15,22 +15,15 @@
     <div class="container">
         <input type="text" id="message" />
         <input type="button" id="sendmessage" value="Send" />
-        <!--<input type="hidden" id="displayname" />-->
         <ul id="discussion"></ul>
     </div>
     <!--Script references. -->
     <!--Reference the SignalR library. -->
-    <script>
-            if (typeof Promise === 'undefined') {
-                document.write('<script type="text/javascript" src="scripts/signalr-clientES5-1.0.0-alpha2-final.js"><\/script>');
-            }
-            else {
-                document.write('<script type="text/javascript" src="scripts/signalr-client-1.0.0-alpha2-final.js"><\/script>');
-            }
-    </script>
+    <script type="text/javascript" src="lib/signalr.min.js"></script>
     <!--Add script to update the page and send messages.-->
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function () {
+
             var messageInput = document.getElementById('message');
 
             // Get the user name and store it to prepend to messages.
@@ -38,7 +31,10 @@
             // Set initial focus to message input box.
             messageInput.focus();
 
-            var connection = new signalR.HubConnection('/chat');
+            // Start the connection.
+            var connection = new signalR.HubConnectionBuilder()
+                                .withUrl('/chat')
+                                .build();
 
             // Create a function that the hub can call to broadcast messages.
             connection.on('broadcastMessage', function (name, message) {
@@ -51,17 +47,22 @@
                 document.getElementById('discussion').appendChild(liElement);
             });
 
-            // Start the connection.
-            connection.start().then(function () {
-                document.getElementById('sendmessage').addEventListener('click', function (event) {
-                    // Call the Send method on the hub.
-                    connection.invoke('send', name, messageInput.value);
+            // Transport fallback functionality is now built into start.
+            connection.start()
+                .then(function () {
+                    console.log('connection started');
+                    document.getElementById('sendmessage').addEventListener('click', function (event) {
+                        // Call the Send method on the hub.
+                        connection.invoke('send', name, messageInput.value);
 
-                    // Clear text box and reset focus for next comment.
-                    messageInput.value = '';
-                    messageInput.focus();
-                    event.preventDefault();
-                });
+                        // Clear text box and reset focus for next comment.
+                        messageInput.value = '';
+                        messageInput.focus();
+                        event.preventDefault();
+                    });
+            })
+            .catch(error => {
+                console.error(error.message);
             });
         });
     </script>

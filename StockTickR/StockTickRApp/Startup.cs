@@ -1,27 +1,37 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using StockTickR.Hubs;
 
-namespace SignalR.StockTicker
+namespace StockTickR
 {
     public class Startup
     {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSignalR();
+            services.AddSignalR()
+                    .AddMessagePackProtocol();
 
-            services.AddScoped<StockTickerHub>();
             services.AddSingleton<StockTicker>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
             app.UseFileServer();
 
-            app.UseSignalR(routes =>
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapHub<StockTickerHub>("stocks");
+                endpoints.MapHub<StockTickerHub>("/stocks");
             });
         }
     }
